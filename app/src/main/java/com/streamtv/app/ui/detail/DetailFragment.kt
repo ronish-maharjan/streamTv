@@ -1,7 +1,6 @@
 package com.streamtv.app.ui.detail
 
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.leanback.app.DetailsSupportFragment
 import androidx.leanback.app.DetailsSupportFragmentBackgroundController
@@ -30,16 +29,29 @@ class DetailFragment : DetailsSupportFragment() {
             set(0, Action(0, "▶  Play Now"))
         }
 
-        val presenterSelector = ClassPresenterSelector().apply {
-            val detailsPresenter = FullWidthDetailsOverviewRowPresenter(
-                object : AbstractDetailsDescriptionPresenter() {
-                    override fun onBindDescription(vh: ViewHolder, item: Any) {
-                        vh.title.text = item as String
-                        vh.subtitle.text = description
-                    }
+        // ✅ Fix — set listener on the presenter, not the fragment
+        val detailsPresenter = FullWidthDetailsOverviewRowPresenter(
+            object : AbstractDetailsDescriptionPresenter() {
+                override fun onBindDescription(vh: ViewHolder, item: Any) {
+                    vh.title.text = item as String
+                    vh.subtitle.text = description
                 }
-            )
-            detailsPresenter.backgroundColor = 0xFF1a1a2e.toInt()
+            }
+        )
+
+        detailsPresenter.backgroundColor = 0xFF1a1a2e.toInt()
+
+        // ✅ This is the correct way to set action click listener
+        detailsPresenter.setOnActionClickedListener { action ->
+            if (action.id == 0L) {
+                val intent = Intent(requireContext(), PlayerActivity::class.java)
+                intent.putExtra(PlayerActivity.EXTRA_STREAM_URL, streamUrl)
+                intent.putExtra(PlayerActivity.EXTRA_TITLE, title)
+                startActivity(intent)
+            }
+        }
+
+        val presenterSelector = ClassPresenterSelector().apply {
             addClassPresenter(DetailsOverviewRow::class.java, detailsPresenter)
         }
 
@@ -47,26 +59,16 @@ class DetailFragment : DetailsSupportFragment() {
         adapter.add(row)
         this.adapter = adapter
 
-        // Load background
+        // Load thumbnail as background
         if (thumbnail != null) {
             val request = ImageRequest.Builder(requireContext())
                 .data(thumbnail)
                 .target { drawable ->
                     bgController.enableParallax()
-                    bgController.coverBitmap = null
                     row.imageDrawable = drawable
                 }
                 .build()
             requireContext().imageLoader.enqueue(request)
-        }
-
-        onActionClickedListener = OnActionClickedListener { action ->
-            if (action.id == 0L) {
-                val intent = Intent(requireContext(), PlayerActivity::class.java)
-                intent.putExtra(PlayerActivity.EXTRA_STREAM_URL, streamUrl)
-                intent.putExtra(PlayerActivity.EXTRA_TITLE, title)
-                startActivity(intent)
-            }
         }
     }
 }
