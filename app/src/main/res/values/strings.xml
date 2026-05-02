@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StreamTV</string>
+    <string name="setup_title">Welcome to StreamTV</string>
+    <string name="setup_subtitle">Connect to your local media server</string>
+    <string name="label_server_ip">Server Address</string>
+    <string name="hint_server_ip">192.168.1.x:3000</string>
+    <string name="label_api_key">API Key</string>
+    <string name="hint_api_key">your-secret-key</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_save">Save Changes</string>
+    <string name="btn_back">Go Back</string>
+    <string name="play_now">▶  Play Now</string>
+    <string name="settings_title">Settings</string>
 </resources>

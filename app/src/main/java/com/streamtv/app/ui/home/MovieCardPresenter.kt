@@ -1,5 +1,7 @@
 package com.streamtv.app.ui.home
 
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -8,9 +10,6 @@ import coil.load
 import coil.transform.RoundedCornersTransformation
 import com.streamtv.app.R
 import com.streamtv.app.data.model.Movie
-import android.view.LayoutInflater
-import android.view.View
-import android.widget.FrameLayout
 
 class MovieCardPresenter : Presenter() {
 
@@ -28,17 +27,26 @@ class MovieCardPresenter : Presenter() {
 
         val thumbnail = view.findViewById<ImageView>(R.id.movie_thumbnail)
         val title = view.findViewById<TextView>(R.id.movie_title)
+        val placeholder = view.findViewById<View>(R.id.placeholder)
 
         title.text = movie.title
 
-        if (movie.thumbnail != null) {
+        if (!movie.thumbnail.isNullOrEmpty()) {
+            placeholder.visibility = View.GONE
+            thumbnail.visibility = View.VISIBLE
             thumbnail.load(movie.thumbnail) {
-                crossfade(true)
-                transformations(RoundedCornersTransformation(8f))
-                error(android.R.drawable.ic_menu_gallery)
+                crossfade(300)
+                transformations(RoundedCornersTransformation(12f))
+                listener(
+                    onError = { _, _ ->
+                        thumbnail.visibility = View.GONE
+                        placeholder.visibility = View.VISIBLE
+                    }
+                )
             }
         } else {
-            thumbnail.setImageResource(android.R.drawable.ic_menu_gallery)
+            thumbnail.visibility = View.GONE
+            placeholder.visibility = View.VISIBLE
         }
     }
 
