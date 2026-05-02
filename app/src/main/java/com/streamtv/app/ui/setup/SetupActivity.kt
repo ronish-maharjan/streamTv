@@ -20,10 +20,16 @@ class SetupActivity : FragmentActivity() {
 
         prefs = AppPrefs(this)
 
-        // Pre-fill if already saved
+        // ✅ Pre-fill current values so user can see and edit them
         if (prefs.serverIp.isNotEmpty()) {
             binding.etServerIp.setText(prefs.serverIp)
             binding.etApiKey.setText(prefs.apiKey)
+
+            // ✅ Change button text if already configured
+            binding.btnConnect.text = "Save & Reconnect"
+
+            // ✅ Show back button if already configured (came from settings)
+            binding.btnBack.visibility = android.view.View.VISIBLE
         }
 
         binding.btnConnect.setOnClickListener {
@@ -31,14 +37,25 @@ class SetupActivity : FragmentActivity() {
             val apiKey = binding.etApiKey.text.toString().trim()
 
             if (ip.isEmpty()) {
-                Toast.makeText(this, "Please enter server IP", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please enter server IP and port", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            // ✅ Save new values
             prefs.serverIp = ip
             prefs.apiKey = apiKey
 
-            startActivity(Intent(this, HomeActivity::class.java))
+            Toast.makeText(this, "✅ Settings saved!", Toast.LENGTH_SHORT).show()
+
+            // ✅ Go to home and clear back stack
+            val intent = Intent(this, HomeActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        // ✅ Back button — just close settings and go back
+        binding.btnBack.setOnClickListener {
             finish()
         }
     }
