@@ -37,7 +37,7 @@ class PlayerActivity : FragmentActivity() {
             return
         }
 
-        binding.playerTitle.text = title
+        //binding.playerTitle.text = title
         initPlayer(streamUrl)
     }
 

@@ -7,6 +7,7 @@ import androidx.leanback.app.DetailsSupportFragmentBackgroundController
 import androidx.leanback.widget.*
 import coil.imageLoader
 import coil.request.ImageRequest
+import com.streamtv.app.data.prefs.AppPrefs
 import com.streamtv.app.ui.player.PlayerActivity
 
 class DetailFragment : DetailsSupportFragment() {
@@ -18,18 +19,21 @@ class DetailFragment : DetailsSupportFragment() {
 
         bgController = DetailsSupportFragmentBackgroundController(this)
 
+        val prefs = AppPrefs(requireContext())
+
         val title = arguments?.getString(DetailActivity.EXTRA_TITLE) ?: "Movie"
         val description = arguments?.getString(DetailActivity.EXTRA_DESCRIPTION) ?: ""
-        val streamUrl = arguments?.getString(DetailActivity.EXTRA_STREAM_URL) ?: ""
+        val movieId = arguments?.getString(DetailActivity.EXTRA_MOVIE_ID) ?: ""
         val thumbnail = arguments?.getString(DetailActivity.EXTRA_THUMBNAIL)
 
-        // Build detail row
+        // ✅ Build stream URL from saved IP — never trust server-returned URL
+        val streamUrl = "http://${prefs.serverIp}/stream/$movieId"
+
         val row = DetailsOverviewRow(title)
         row.actionsAdapter = SparseArrayObjectAdapter().apply {
             set(0, Action(0, "▶  Play Now"))
         }
 
-        // ✅ Fix — set listener on the presenter, not the fragment
         val detailsPresenter = FullWidthDetailsOverviewRowPresenter(
             object : AbstractDetailsDescriptionPresenter() {
                 override fun onBindDescription(vh: ViewHolder, item: Any) {
@@ -41,12 +45,12 @@ class DetailFragment : DetailsSupportFragment() {
 
         detailsPresenter.backgroundColor = 0xFF1a1a2e.toInt()
 
-        // ✅ This is the correct way to set action click listener
         detailsPresenter.setOnActionClickedListener { action ->
             if (action.id == 0L) {
-                val intent = Intent(requireContext(), PlayerActivity::class.java)
-                intent.putExtra(PlayerActivity.EXTRA_STREAM_URL, streamUrl)
-                intent.putExtra(PlayerActivity.EXTRA_TITLE, title)
+                val intent = Intent(requireContext(), PlayerActivity::class.java).apply {
+                    putExtra(PlayerActivity.EXTRA_STREAM_URL, streamUrl)
+                    putExtra(PlayerActivity.EXTRA_TITLE, title)
+                }
                 startActivity(intent)
             }
         }
@@ -59,7 +63,6 @@ class DetailFragment : DetailsSupportFragment() {
         adapter.add(row)
         this.adapter = adapter
 
-        // Load thumbnail as background
         if (thumbnail != null) {
             val request = ImageRequest.Builder(requireContext())
                 .data(thumbnail)
