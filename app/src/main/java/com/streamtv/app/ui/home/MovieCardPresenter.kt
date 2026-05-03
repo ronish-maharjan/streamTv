@@ -1,5 +1,6 @@
 package com.streamtv.app.ui.home
 
+import android.animation.ObjectAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,20 @@ class MovieCardPresenter : Presenter() {
             .inflate(R.layout.item_movie_card, parent, false)
         view.isFocusable = true
         view.isFocusableInTouchMode = true
+
+        // ✅ Scale up smoothly on focus, back on blur
+        view.setOnFocusChangeListener { v, hasFocus ->
+            val scale = if (hasFocus) 1.08f else 1.0f
+            v.animate()
+                .scaleX(scale)
+                .scaleY(scale)
+                .setDuration(150)
+                .start()
+
+            // Bring focused card to front so border isn't clipped
+            if (hasFocus) v.bringToFront()
+        }
+
         return ViewHolder(view)
     }
 
@@ -28,15 +43,17 @@ class MovieCardPresenter : Presenter() {
         val thumbnail = view.findViewById<ImageView>(R.id.movie_thumbnail)
         val title = view.findViewById<TextView>(R.id.movie_title)
         val placeholder = view.findViewById<View>(R.id.placeholder)
+        val placeholderTitle = view.findViewById<TextView>(R.id.placeholder_title)
 
         title.text = movie.title
+        placeholderTitle.text = movie.title
 
         if (!movie.thumbnail.isNullOrEmpty()) {
             placeholder.visibility = View.GONE
             thumbnail.visibility = View.VISIBLE
             thumbnail.load(movie.thumbnail) {
-                crossfade(300)
-                transformations(RoundedCornersTransformation(12f))
+                crossfade(250)
+                transformations(RoundedCornersTransformation(10f))
                 listener(
                     onError = { _, _ ->
                         thumbnail.visibility = View.GONE
@@ -53,5 +70,8 @@ class MovieCardPresenter : Presenter() {
     override fun onUnbindViewHolder(viewHolder: ViewHolder) {
         val thumbnail = viewHolder.view.findViewById<ImageView>(R.id.movie_thumbnail)
         thumbnail.setImageDrawable(null)
+        // Reset scale when recycled
+        viewHolder.view.scaleX = 1.0f
+        viewHolder.view.scaleY = 1.0f
     }
 }
