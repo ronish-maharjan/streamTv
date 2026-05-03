@@ -4,33 +4,35 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <!-- Video -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:focusable="true"/>
+        android:focusable="true"
+        android:keepScreenOn="true"/>
 
-    <!-- Top bar shown only when controls visible -->
+    <!-- Minimal top bar — only shows with controls -->
     <LinearLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="24dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
         android:background="@drawable/gradient_top"
         android:visibility="gone">
 
-
         <TextView
             android:id="@+id/player_title"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end"/>
+
     </LinearLayout>
 
 </FrameLayout>

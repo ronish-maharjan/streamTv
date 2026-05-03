@@ -22,134 +22,82 @@ class HomeFragment : BrowseSupportFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        headersState = HEADERS_ENABLED   // ✅ show left sidebar
+        headersState = HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
-        title = "🎬 StreamTV"
-        brandColor = 0xFF1a1a2e.toInt()
-        searchAffordanceColor = 0xFFe50914.toInt()
+        title = "StreamTV"
+        brandColor = 0xFF0A0A0F.toInt()
+        searchAffordanceColor = 0xFFE50914.toInt()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         prefs = AppPrefs(requireContext())
-        viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
 
-        setupAdapter()
+        rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
+        adapter = rowsAdapter
+
         observeState()
 
-        viewModel.loadMovies(prefs.getBaseUrl(), prefs.apiKey)
-
-        // ✅ Handle clicks on both movies and settings row
-        onItemViewClickedListener = OnItemViewClickedListener { _, item, _, row ->
+        onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
             when (item) {
                 is Movie -> {
-                    val intent = Intent(requireContext(), DetailActivity::class.java)
-                    intent.putExtra(DetailActivity.EXTRA_MOVIE_ID, item.id)
-                    intent.putExtra(DetailActivity.EXTRA_STREAM_URL, item.streamUrl)
-                    intent.putExtra(DetailActivity.EXTRA_TITLE, item.title)
-                    intent.putExtra(DetailActivity.EXTRA_THUMBNAIL, item.thumbnail)
-                    intent.putExtra(DetailActivity.EXTRA_DESCRIPTION, item.description)
+                    val intent = Intent(requireContext(), DetailActivity::class.java).apply {
+                        putExtra(DetailActivity.EXTRA_MOVIE_ID, item.id)
+                        putExtra(DetailActivity.EXTRA_STREAM_URL, item.streamUrl)
+                        putExtra(DetailActivity.EXTRA_TITLE, item.title)
+                        putExtra(DetailActivity.EXTRA_THUMBNAIL, item.thumbnail)
+                        putExtra(DetailActivity.EXTRA_DESCRIPTION, item.description)
+                    }
                     startActivity(intent)
                 }
-                is String -> {
-                    // Settings item clicked
-                    if (item == "⚙️ Change Server Settings") {
-                        startActivity(Intent(requireContext(), SetupActivity::class.java))
-                    } else if (item == "🔄 Refresh") {
-                        viewModel.loadMovies(prefs.getBaseUrl(), prefs.apiKey)
+                is SettingsItem -> {
+                    when (item.id) {
+                        SettingsItem.ID_SETTINGS ->
+                            startActivity(Intent(requireContext(), SetupActivity::class.java))
+                        SettingsItem.ID_REFRESH ->
+                            viewModel.loadMovies(prefs.getBaseUrl(), prefs.apiKey)
                     }
                 }
             }
         }
-    }
-
-    private fun setupAdapter() {
-        rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-        adapter = rowsAdapter
     }
 
     private fun observeState() {
         lifecycleScope.launch {
             viewModel.state.collectLatest { state ->
-                when (state) {
-                    is MoviesState.Loading -> showLoading()
-                    is MoviesState.Success -> showMovies(state.movies)
-                    is MoviesState.Error -> showError(state.message)
+                if (state is MoviesState.Success) {
+                    buildRows(state.movies)
                 }
             }
         }
     }
 
-    private fun showLoading() {
-        rowsAdapter.clear()
-        addSettingsRow() // ✅ always show settings even while loading
-    }
-
-    private fun showMovies(movies: List<Movie>) {
+    private fun buildRows(movies: List<Movie>) {
         rowsAdapter.clear()
 
-        // ✅ Movies row
+        // Movies row
         val cardPresenter = MovieCardPresenter()
         val movieAdapter = ArrayObjectAdapter(cardPresenter)
         movies.forEach { movieAdapter.add(it) }
-        rowsAdapter.add(ListRow(HeaderItem(0, "🎬 All Movies (${movies.size})"), movieAdapter))
-
-        addSettingsRow()
-    }
-
-    private fun showError(message: String) {
-        rowsAdapter.clear()
-        val cardPresenter = MovieCardPresenter()
-        val emptyAdapter = ArrayObjectAdapter(cardPresenter)
-        rowsAdapter.add(ListRow(HeaderItem(0, "⚠️ $message"), emptyAdapter))
-        addSettingsRow()
-    }
-
-    // ✅ Settings row always visible at the bottom
-    private fun addSettingsRow() {
-        val settingsPresenter = object : Presenter() {
-            override fun onCreateViewHolder(parent: android.view.ViewGroup): ViewHolder {
-                val tv = android.widget.TextView(parent.context).apply {
-                    layoutParams = android.view.ViewGroup.LayoutParams(320, 120)
-                    textSize = 16f
-                    setTextColor(0xFFFFFFFF.toInt())
-                    gravity = android.view.Gravity.CENTER
-                    setPadding(24, 0, 24, 0)
-                    isFocusable = true
-                    isFocusableInTouchMode = true
-                    background = android.graphics.drawable.StateListDrawable().apply {
-                        // focused state
-                        val focused = android.graphics.drawable.GradientDrawable().apply {
-                            setColor(0xFFe50914.toInt())
-                            cornerRadius = 12f
-                        }
-                        // normal state
-                        val normal = android.graphics.drawable.GradientDrawable().apply {
-                            setColor(0xFF333344.toInt())
-                            cornerRadius = 12f
-                        }
-                        addState(intArrayOf(android.R.attr.state_focused), focused)
-                        addState(intArrayOf(), normal)
-                    }
-                }
-                return ViewHolder(tv)
-            }
-
-            override fun onBindViewHolder(viewHolder: ViewHolder, item: Any) {
-                (viewHolder.view as android.widget.TextView).text = item as String
-            }
-
-            override fun onUnbindViewHolder(viewHolder: ViewHolder) {}
-        }
-
-        val settingsAdapter = ArrayObjectAdapter(settingsPresenter)
-        settingsAdapter.add("⚙️ Change Server Settings")
-        settingsAdapter.add("🔄 Refresh")
-
         rowsAdapter.add(
-            ListRow(HeaderItem(1, "Settings"), settingsAdapter)
+            ListRow(HeaderItem(0, "All Movies  •  ${movies.size} titles"), movieAdapter)
         )
+
+        // Settings row — clean minimal buttons
+        val settingsPresenter = SettingsItemPresenter()
+        val settingsAdapter = ArrayObjectAdapter(settingsPresenter)
+        settingsAdapter.add(SettingsItem(SettingsItem.ID_REFRESH, "⟳  Refresh"))
+        settingsAdapter.add(SettingsItem(SettingsItem.ID_SETTINGS, "⚙  Settings"))
+        rowsAdapter.add(ListRow(HeaderItem(1, ""), settingsAdapter))
+    }
+}
+
+// Clean data class for settings items
+data class SettingsItem(val id: Int, val label: String) {
+    companion object {
+        const val ID_REFRESH = 1
+        const val ID_SETTINGS = 2
     }
 }

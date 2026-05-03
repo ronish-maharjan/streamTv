@@ -1,6 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/home_fragment_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0f0f0f"/>
+    android:background="#0A0A0F">
+
+    <!-- Browse fragment goes here -->
+    <FrameLayout
+        android:id="@+id/home_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!-- Loading overlay -->
+    <LinearLayout
+        android:id="@+id/loading_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="#0A0A0F"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:indeterminateTint="#E50914"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading your movies..."
+            android:textColor="#555577"
+            android:textSize="15sp"/>
+
+    </LinearLayout>
+
+    <!-- Error overlay -->
+    <LinearLayout
+        android:id="@+id/error_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="#0A0A0F"
+        android:padding="40dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️"
+            android:textSize="48sp"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/error_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#AAAACC"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btn_retry"
+            android:layout_width="200dp"
+            android:layout_height="48dp"
+            android:text="RETRY"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:background="@drawable/bg_button_primary"
+            android:textColor="#FFFFFF"
+            android:focusable="true"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btn_go_settings"
+            android:layout_width="200dp"
+            android:layout_height="48dp"
+            android:text="SETTINGS"
+            android:textSize="13sp"
+            android:letterSpacing="0.08"
+            android:background="@drawable/bg_button_secondary"
+            android:textColor="#AAAACC"
+            android:focusable="true"/>
+
+    </LinearLayout>
+
+</FrameLayout>
